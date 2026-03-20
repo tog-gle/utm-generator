@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UTM Generator – DIY BOOKS / TOGL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Shippori+Mincho:wght@400;600&display=swap');
+
+  :root {
+    --bg: #f5f2ed;
+    --paper: #faf8f4;
+    --ink: #1a1714;
+    --ink-light: #6b6560;
+    --accent: #c94a2a;
+    --accent-light: #e8d5cf;
+    --border: #d4cfc8;
+    --mono: 'DM Mono', monospace;
+    --serif: 'Shippori Mincho', serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--mono);
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  header {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 20px 24px 18px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  header h1 {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  header p {
+    font-family: var(--serif);
+    font-size: 20px;
+    margin-top: 2px;
+    color: #fff;
+  }
+
+  .tabs {
+    display: flex;
+    background: var(--ink);
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .tab {
+    flex: 1;
+    padding: 10px 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+  }
+
+  .tab.active {
+    color: #fff;
+    border-bottom-color: var(--accent);
+  }
+
+  .section {
+    display: none;
+    padding: 24px 20px;
+  }
+  .section.active { display: block; }
+
+  .field-group {
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 6px;
+  }
+
+  label span {
+    color: var(--accent);
+    margin-left: 4px;
+  }
+
+  input[type="text"], input[type="url"] {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus {
+    border-color: var(--accent);
+  }
+
+  .chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .chip {
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--paper);
+    color: var(--ink-light);
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .chip.selected {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  .chip.accent.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+  }
+
+  .result-box {
+    background: var(--ink);
+    border-radius: 6px;
+    padding: 16px;
+    margin-top: 20px;
+    position: relative;
+  }
+
+  .result-label {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 10px;
+  }
+
+  .result-url {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #fff;
+    word-break: break-all;
+    line-height: 1.7;
+  }
+
+  .result-url .param-key { color: #8bb8e8; }
+  .result-url .param-val { color: #a8e6a3; }
+  .result-url .param-sep { color: rgba(255,255,255,0.3); }
+
+  .btn-copy {
+    margin-top: 14px;
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn-copy.copied {
+    background: #2a7a3a;
+  }
+
+  .btn-copy:active {
+    transform: scale(0.98);
+  }
+
+  .notice {
+    font-size: 11px;
+    color: var(--ink-light);
+    margin-top: 10px;
+    line-height: 1.6;
+    padding: 10px 12px;
+    background: var(--accent-light);
+    border-radius: 4px;
+  }
+
+  .history-item {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .history-item:active { border-color: var(--accent); }
+
+  .history-meta {
+    font-size: 10px;
+    color: var(--ink-light);
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .history-url {
+    font-size: 11px;
+    word-break: break-all;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+
+  .history-copy-btn {
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 10px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .empty-history {
+    text-align: center;
+    color: var(--ink-light);
+    font-size: 12px;
+    padding: 40px 20px;
+    line-height: 1.8;
+  }
+
+  .guide-item {
+    margin-bottom: 24px;
+  }
+
+  .guide-step {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .guide-title {
+    font-family: var(--serif);
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .guide-body {
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--ink-light);
+  }
+
+  .code-block {
+    background: var(--ink);
+    color: #a8e6a3;
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    line-height: 1.7;
+    margin-top: 8px;
+    word-break: break-all;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: 3px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>DIY BOOKS / TOGL</h1>
+  <p>UTM Generator</p>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('generate')">作成</button>
+    <button class="tab" onclick="switchTab('history')">履歴</button>
+    <button class="tab" onclick="switchTab('guide')">使い方</button>
+  </div>
+</header>
+
+<div class="section active" id="tab-generate">
+
+  <div class="field-group">
+    <label>送り先URL <span>*</span></label>
+    <input type="url" id="url" placeholder="https://diybooks.jp/products/xxx" />
+  </div>
+
+  <div class="field-group">
+    <label>流入元（source） <span>*</span></label>
+    <div class="chip-group" id="source-chips">
+      <button class="chip accent" data-val="instagram" onclick="selectChip(this, 'source')">Instagram</button>
+      <button class="chip accent" data-val="facebook" onclick="selectChip(this, 'source')">Facebook</button>
+      <button class="chip accent" data-val="mailchimp" onclick="selectChip(this, 'source')">Mailchimp</button>
+      <button class="chip accent" data-val="flyer" onclick="selectChip(this, 'source')">チラシ</button>
+      <button class="chip accent" data-val="podcast" onclick="selectChip(this, 'source')">Podcast</button>
+      <button class="chip accent" data-val="youtube" onclick="selectChip(this, 'source')">YouTube</button>
+      <button class="chip accent" data-val="x" onclick="selectChip(this, 'source')">X</button>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <label>チャネル（medium） <span>*</span></label>
+    <div class="chip-group" id="medium-chips">
+      <button class="chip" data-val="social" onclick="selectChip(this, 'medium')">social</button>
+      <button class="chip" data-val="email" onclick="selectChip(this, 'medium')">email</button>
+      <button class="chip" data-val="cpc" onclick="selectChip(this, 'medium')">cpc（広告）</button>
+      <button class="chip" data-val="qr" onclick="selectChip(this, 'medium')">qr（チラシ）</button>
+      <button class="chip" data-val="referral" onclick="selectChip(this, 'medium')">referral</button>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <label>コンテンツ種別（content）</label>
+    <div class="chip-group" id="content-chips">
+      <button class="chip" data-val="story" onclick="selectChip(this, 'content')">story</button>
+      <button class="chip" data-val="feed" onclick="selectChip(this, 'content')">feed</button>
+      <button class="chip" data-val="bio_link" onclick="selectChip(this, 'content')">bio link</button>
+      <button class="chip" data-val="reel" onclick="selectChip(this, 'content')">reel</button>
+      <button class="chip" data-val="cta_button" onclick="selectChip(this, 'content')">CTA button</button>
+      <button class="chip" data-val="text_link" onclick="selectChip(this, 'content')">text link</button>
+      <button class="chip" data-val="ad_01" onclick="selectChip(this, 'content')">ad_01</button>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <label>キャンペーン名（campaign）</label>
+    <div class="chip-group" id="campaign-chips" style="margin-bottom:8px">
+      <button class="chip" data-val="popup_coupdemain_202606" onclick="selectChip(this, 'campaign')">CDM来日ポップアップ</button>
+      <button class="chip" data-val="zineschool_2026" onclick="selectChip(this, 'campaign')">ZINEスクール</button>
+      <button class="chip" data-val="newsletter_regular" onclick="selectChip(this, 'campaign')">定期ニュースレター</button>
+      <button class="chip" data-val="blog_article" onclick="selectChip(this, 'campaign')">ブログ記事</button>
+    </div>
+    <input type="text" id="campaign-custom" placeholder="またはここに入力（例: event_osaka_202606）" oninput="clearChips('campaign'); updateResult()" />
+  </div>
+
+  <div class="divider"></div>
+
+  <div id="result-area" style="display:none">
+    <div class="result-box">
+      <div class="result-label">生成されたURL</div>
+      <div class="result-url" id="result-url"></div>
+    </div>
+    <button class="btn-copy" id="copy-btn" onclick="copyURL()">📋 コピー</button>
+    <p class="notice">コピーしたらInstagramのリンクスタンプ、またはbio linkに貼り付けてください。</p>
+  </div>
+
+  <div id="empty-notice" style="padding:20px 0; font-size:12px; color:var(--ink-light); line-height:1.8;">
+    流入元・チャネル・URLを選ぶと自動でURLが生成されます。
+  </div>
+
+</div>
+
+<div class="section" id="tab-history">
+  <div id="history-list"></div>
+</div>
+
+<div class="section" id="tab-guide">
+
+  <div class="guide-item">
+    <div class="guide-step">iPhoneで使う方法</div>
+    <div class="guide-title">ホーム画面に追加する</div>
+    <div class="guide-body">
+      Safariでこのページを開き、下の共有ボタン（□↑）→「ホーム画面に追加」でアプリのように使えます。
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="guide-item">
+    <div class="guide-step">GA4での確認</div>
+    <div class="guide-title">どこで結果を見るか</div>
+    <div class="guide-body">
+      GA4 → レポート → 集客 → トラフィック獲得
+    </div>
+  </div>
+
+</div>
+
+<script>
+const state = {
+  brand: 'diybooks',
+  source: '',
+  medium: '',
+  content: '',
+  campaign: '',
+};
+
+function switchTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'history') renderHistory();
+}
+
+function selectChip(el, key) {
+  const group = el.parentElement;
+  group.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state[key] = el.dataset.val;
+  if (key === 'campaign') document.getElementById('campaign-custom').value = '';
+  updateResult();
+}
+
+function clearChips(key) {
+  document.querySelectorAll(`#${key}-chips .chip`).forEach(c => c.classList.remove('selected'));
+  state[key] = '';
+}
+
+function getToday() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function updateResult() {
+  const url = document.getElementById('url').value.trim();
+  const customCampaign = document.getElementById('campaign-custom').value.trim();
+  const campaign = customCampaign || state.campaign;
+  const { brand, source, medium, content } = state;
+
+  const ready = url && source && medium;
+  document.getElementById('result-area').style.display = ready ? 'block' : 'none';
+  document.getElementById('empty-notice').style.display = ready ? 'none' : 'block';
+  if (!ready) return;
+
+  const campaignName = campaign
+    ? (brand ? `${brand}_${campaign}` : campaign)
+    : (brand ? `${brand}_${source}_${getToday()}` : `${source}_${getToday()}`);
+
+  const params = new URLSearchParams();
+  params.set('utm_source', source);
+  params.set('utm_medium', medium);
+  params.set('utm_campaign', campaignName);
+  if (content) params.set('utm_content', content);
+
+  const base = url.includes('?') ? url + '&' : url + '?';
+  const full = base + params.toString();
+
+  const colored = full.replace(/([?&])(utm_\w+)=([^&]+)/g, (_, sep, key, val) => {
+    return `<span class="param-sep">${sep}</span><span class="param-key">${key}</span><span class="param-sep">=</span><span class="param-val">${val}</span>`;
+  });
+
+  document.getElementById('result-url').innerHTML = colored;
+  document.getElementById('result-url').dataset.raw = full;
+  document.getElementById('copy-btn').textContent = '📋 コピー';
+  document.getElementById('copy-btn').classList.remove('copied');
+}
+
+function copyURL() {
+  const url = document.getElementById('result-url').dataset.raw;
+  if (!url) return;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✓ コピーしました';
+    btn.classList.add('copied');
+    saveHistory(url);
+  });
+}
+
+function saveHistory(url) {
+  const history = JSON.parse(localStorage.getItem('utm_history') || '[]');
+  history.unshift({
+    url,
+    date: new Date().toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    source: state.source,
+    medium: state.medium,
+  });
+  if (history.length > 30) history.pop();
+  localStorage.setItem('utm_history', JSON.stringify(history));
+}
+
+function renderHistory() {
+  const history = JSON.parse(localStorage.getItem('utm_history') || '[]');
+  const el = document.getElementById('history-list');
+  if (history.length === 0) {
+    el.innerHTML = '<div class="empty-history">まだ履歴がありません。</div>';
+    return;
+  }
+  el.innerHTML = history.map((h, i) => `
+    <div class="history-item">
+      <div class="history-meta"><span>${h.source || ''} / ${h.medium || ''}</span><span>${h.date}</span></div>
+      <div class="history-url">${h.url}</div>
+      <button class="history-copy-btn" onclick="copyFromHistory(${i})">コピー</button>
+    </div>
+  `).join('');
+}
+
+function copyFromHistory(i) {
+  const history = JSON.parse(localStorage.getItem('utm_history') || '[]');
+  navigator.clipboard.writeText(history[i].url);
+  event.target.textContent = '✓';
+  setTimeout(() => event.target.textContent = 'コピー', 1500);
+}
+
+document.getElementById('url').addEventListener('input', updateResult);
+document.getElementById('campaign-custom').addEventListener('input', updateResult);
+</script>
+
+</body>
+</html>

@@ -481,21 +481,17 @@ function selectChip(el, key) {
   group.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   state[key] = el.dataset.val;
-
-  // キャンペーンチップを選んだらカスタム入力をクリア
-  if (key === 'campaign') {
-    document.getElementById('campaign-custom').value = '';
-  }
-
+  // チップ選択時はカスタム入力をクリア
+  const customEl = document.getElementById(`${key}-custom`);
+  if (customEl) customEl.value = '';
+  // campaignチップ選択時もカスタムをクリア
+  if (key === 'campaign') document.getElementById('campaign-custom').value = '';
   updateResult();
 }
 
 function clearChips(key) {
   document.querySelectorAll(`#${key}-chips .chip`).forEach(c => c.classList.remove('selected'));
   state[key] = '';
-  // カスタム入力もリセット（チップ選択時）
-  const customEl = document.getElementById(`${key}-custom`);
-  if (customEl) customEl.value = '';
 }
 
 function getToday() {

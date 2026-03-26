@@ -221,6 +221,7 @@
     border-radius: 4px;
   }
 
+  /* History */
   .history-item {
     background: var(--paper);
     border: 1px solid var(--border);
@@ -270,6 +271,7 @@
     line-height: 1.8;
   }
 
+  /* Guide */
   .guide-item {
     margin-bottom: 24px;
   }
@@ -330,6 +332,7 @@
   </div>
 </header>
 
+<!-- 作成タブ -->
 <div class="section active" id="tab-generate">
 
   <div class="field-group">
@@ -339,7 +342,7 @@
 
   <div class="field-group">
     <label>流入元（source） <span>*</span></label>
-    <div class="chip-group" id="source-chips">
+    <div class="chip-group" id="source-chips" style="margin-bottom:8px">
       <button class="chip accent" data-val="instagram" onclick="selectChip(this, 'source')">Instagram</button>
       <button class="chip accent" data-val="facebook" onclick="selectChip(this, 'source')">Facebook</button>
       <button class="chip accent" data-val="mailchimp" onclick="selectChip(this, 'source')">Mailchimp</button>
@@ -348,17 +351,19 @@
       <button class="chip accent" data-val="youtube" onclick="selectChip(this, 'source')">YouTube</button>
       <button class="chip accent" data-val="x" onclick="selectChip(this, 'source')">X</button>
     </div>
+    <input type="text" id="source-custom" placeholder="またはここに入力（例: line, tiktok, note…）" oninput="clearChips('source'); updateResult()" />
   </div>
 
   <div class="field-group">
     <label>チャネル（medium） <span>*</span></label>
-    <div class="chip-group" id="medium-chips">
+    <div class="chip-group" id="medium-chips" style="margin-bottom:8px">
       <button class="chip" data-val="social" onclick="selectChip(this, 'medium')">social</button>
       <button class="chip" data-val="email" onclick="selectChip(this, 'medium')">email</button>
       <button class="chip" data-val="cpc" onclick="selectChip(this, 'medium')">cpc（広告）</button>
       <button class="chip" data-val="qr" onclick="selectChip(this, 'medium')">qr（チラシ）</button>
       <button class="chip" data-val="referral" onclick="selectChip(this, 'medium')">referral</button>
     </div>
+    <input type="text" id="medium-custom" placeholder="またはここに入力（例: affiliate, sms…）" oninput="clearChips('medium'); updateResult()" />
   </div>
 
   <div class="field-group">
@@ -402,17 +407,42 @@
 
 </div>
 
+<!-- 履歴タブ -->
 <div class="section" id="tab-history">
   <div id="history-list"></div>
 </div>
 
+<!-- 使い方タブ -->
 <div class="section" id="tab-guide">
 
   <div class="guide-item">
     <div class="guide-step">iPhoneで使う方法</div>
     <div class="guide-title">ホーム画面に追加する</div>
     <div class="guide-body">
-      Safariでこのページを開き、下の共有ボタン（□↑）→「ホーム画面に追加」でアプリのように使えます。
+      Safariでこのページを開き、下の共有ボタン（□↑）→「ホーム画面に追加」でアプリのように使えます。投稿前に10秒で完結します。
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="guide-item">
+    <div class="guide-step">パラメータの意味</div>
+    <div class="guide-title">何が計測できるか</div>
+    <div class="guide-body">
+      <span class="tag">source</span> どこから来たか（Instagram、チラシ…）<br>
+      <span class="tag">medium</span> どの手段か（social、qr、email…）<br>
+      <span class="tag">campaign</span> どのキャンペーンか<br>
+      <span class="tag">content</span> ストーリーかフィードか、など
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="guide-item">
+    <div class="guide-step">注意点</div>
+    <div class="guide-title">Instagramのbio linkについて</div>
+    <div class="guide-body">
+      ストーリーのリンクスタンプはUTMがそのまま通ります。bio linkにLinktr.eeなどを使っている場合はUTMが消えることがあるため、直接URLを使うかShopifyのリンクページを活用してください。
     </div>
   </div>
 
@@ -422,7 +452,8 @@
     <div class="guide-step">GA4での確認</div>
     <div class="guide-title">どこで結果を見るか</div>
     <div class="guide-body">
-      GA4 → レポート → 集客 → トラフィック獲得
+      GA4 → レポート → 集客 → トラフィック獲得<br><br>
+      流入元ごとのセッション数・コンバージョンが確認できます。
     </div>
   </div>
 
@@ -450,31 +481,48 @@ function selectChip(el, key) {
   group.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   state[key] = el.dataset.val;
-  if (key === 'campaign') document.getElementById('campaign-custom').value = '';
+
+  // キャンペーンチップを選んだらカスタム入力をクリア
+  if (key === 'campaign') {
+    document.getElementById('campaign-custom').value = '';
+  }
+
   updateResult();
 }
 
 function clearChips(key) {
   document.querySelectorAll(`#${key}-chips .chip`).forEach(c => c.classList.remove('selected'));
   state[key] = '';
+  // カスタム入力もリセット（チップ選択時）
+  const customEl = document.getElementById(`${key}-custom`);
+  if (customEl) customEl.value = '';
 }
 
 function getToday() {
   const d = new Date();
-  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}`;
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  return `${y}${m}`;
 }
 
 function updateResult() {
   const url = document.getElementById('url').value.trim();
   const customCampaign = document.getElementById('campaign-custom').value.trim();
+  const customSource = document.getElementById('source-custom').value.trim();
+  const customMedium = document.getElementById('medium-custom').value.trim();
   const campaign = customCampaign || state.campaign;
-  const { brand, source, medium, content } = state;
+  const brand = state.brand;
+  const source = customSource || state.source;
+  const medium = customMedium || state.medium;
+  const content = state.content;
 
   const ready = url && source && medium;
   document.getElementById('result-area').style.display = ready ? 'block' : 'none';
   document.getElementById('empty-notice').style.display = ready ? 'none' : 'block';
+
   if (!ready) return;
 
+  // キャンペーン名を自動生成
   const campaignName = campaign
     ? (brand ? `${brand}_${campaign}` : campaign)
     : (brand ? `${brand}_${source}_${getToday()}` : `${source}_${getToday()}`);
@@ -488,6 +536,7 @@ function updateResult() {
   const base = url.includes('?') ? url + '&' : url + '?';
   const full = base + params.toString();
 
+  // 色付き表示
   const colored = full.replace(/([?&])(utm_\w+)=([^&]+)/g, (_, sep, key, val) => {
     return `<span class="param-sep">${sep}</span><span class="param-key">${key}</span><span class="param-sep">=</span><span class="param-val">${val}</span>`;
   });
@@ -501,22 +550,26 @@ function updateResult() {
 function copyURL() {
   const url = document.getElementById('result-url').dataset.raw;
   if (!url) return;
+
   navigator.clipboard.writeText(url).then(() => {
     const btn = document.getElementById('copy-btn');
     btn.textContent = '✓ コピーしました';
     btn.classList.add('copied');
+
+    // 履歴に保存
     saveHistory(url);
   });
 }
 
 function saveHistory(url) {
   const history = JSON.parse(localStorage.getItem('utm_history') || '[]');
-  history.unshift({
+  const entry = {
     url,
     date: new Date().toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
     source: state.source,
     medium: state.medium,
-  });
+  };
+  history.unshift(entry);
   if (history.length > 30) history.pop();
   localStorage.setItem('utm_history', JSON.stringify(history));
 }
@@ -524,13 +577,18 @@ function saveHistory(url) {
 function renderHistory() {
   const history = JSON.parse(localStorage.getItem('utm_history') || '[]');
   const el = document.getElementById('history-list');
+
   if (history.length === 0) {
-    el.innerHTML = '<div class="empty-history">まだ履歴がありません。</div>';
+    el.innerHTML = '<div class="empty-history">まだ履歴がありません。<br>URLをコピーすると自動で保存されます。</div>';
     return;
   }
+
   el.innerHTML = history.map((h, i) => `
     <div class="history-item">
-      <div class="history-meta"><span>${h.source || ''} / ${h.medium || ''}</span><span>${h.date}</span></div>
+      <div class="history-meta">
+        <span>${h.source || ''} / ${h.medium || ''}</span>
+        <span>${h.date}</span>
+      </div>
       <div class="history-url">${h.url}</div>
       <button class="history-copy-btn" onclick="copyFromHistory(${i})">コピー</button>
     </div>
@@ -544,8 +602,11 @@ function copyFromHistory(i) {
   setTimeout(() => event.target.textContent = 'コピー', 1500);
 }
 
+// URLフィールドの変更を監視
 document.getElementById('url').addEventListener('input', updateResult);
 document.getElementById('campaign-custom').addEventListener('input', updateResult);
+document.getElementById('source-custom').addEventListener('input', updateResult);
+document.getElementById('medium-custom').addEventListener('input', updateResult);
 </script>
 
 </body>
